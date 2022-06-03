@@ -1,0 +1,9 @@
+local.env
+*.tfvars
+.terraform
+plan.out
+*.tfstate.backup
+*.tfstate.lock.info
+export
+.vscode
+__pycache__

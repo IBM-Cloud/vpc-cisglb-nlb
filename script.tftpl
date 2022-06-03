@@ -1,0 +1,45 @@
+%{ for zone_index, zone in zones ~}
+zone ${zone_index} ----
+%{ for fip_index, fip in zone.floating_ip ~}
+# ${zone.instances[fip_index].name} ${zone.instances[fip_index].primary_network_interface[0].primary_ip[0].address}
+ssh root@${fip.address}
+# does not work, port conflicts with nlb:
+curl ${fip.address}
+curl ${zone.instances[fip_index].primary_network_interface[0].primary_ip[0].address}
+%{ endfor ~}
+# lb ${zone.lb.name}
+curl ${zone.lb.hostname}
+%{ for private_ip in zone.lb.private_ips ~}
+curl ${private_ip}
+%{ endfor ~}
+%{ for public_ip in zone.lb.public_ips ~}
+curl ${public_ip}
+%{ endfor ~}
+%{ endfor ~}
+
+# onprem ----
+ssh root@${floating_ip_onprem.address}
+
+# gdns lb - global dns load balancer ---
+dig ${dns_glb.name}
+curl ${dns_glb.name}/instance
+
+%{ for id, location in dns_custom_resolver.locations ~}
+dig @${location.dns_server_ip} ${dns_glb.name};
+%{ endfor ~}
+
+%{ for zone_index, zone in zones ~}
+zone ${zone_index} ----
+%{ for instance_index, instance in zone.instances ~}
+# does not work, port conflicts with nlb:
+curl ${instance.primary_network_interface[0].primary_ip[0].address}/instance
+%{ endfor ~}
+# lb ${zone.lb.name}
+curl ${zone.lb.hostname}/instance
+%{ for private_ip in zone.lb.private_ips ~}
+curl ${private_ip}/instance
+%{ endfor ~}
+%{ for public_ip in zone.lb.public_ips ~}
+curl ${public_ip}/instance
+%{ endfor ~}
+%{ endfor ~}
