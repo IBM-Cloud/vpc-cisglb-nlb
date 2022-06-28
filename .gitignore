@@ -7,3 +7,8 @@ plan.out
 export
 .vscode
 __pycache__
+*.drawio.bkp
+.terraform*
+terraform.tfstate
+*.drawio.dtmp
+venv/

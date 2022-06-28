@@ -29,8 +29,9 @@ resource "ibm_is_vpc_address_prefix" "onprem" {
 
 resource "ibm_is_subnet" "onprem" {
   name            = local.onprem_name
-  vpc             = ibm_is_vpc.onprem.id
   tags            = local.tags
+  resource_group  = data.ibm_resource_group.all_rg.id
+  vpc             = ibm_is_vpc.onprem.id
   zone            = local.zone_onprem
   ipv4_cidr_block = ibm_is_vpc_address_prefix.onprem.cidr
 }

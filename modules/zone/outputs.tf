@@ -1,6 +1,9 @@
 output "zone" {
   value = var.zone
 }
+output "name" {
+  value = var.name
+}
 output "instances" {
   value = ibm_is_instance.zone
 }

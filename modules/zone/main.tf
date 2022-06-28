@@ -6,6 +6,7 @@ locals {
 }
 resource "ibm_is_subnet" "zone" {
   name            = var.name
+  resource_group = var.resource_group.id
   vpc             = var.vpc.id
   zone            = var.zone
   ipv4_cidr_block = local.cidr_zone
@@ -51,12 +52,14 @@ resource "ibm_is_floating_ip" "zone" {
 }
 resource "ibm_is_subnet" "zone_nlb" {
   name            = "${var.name}-nlb"
+  resource_group = var.resource_group.id
   vpc             = var.vpc.id
   zone            = var.zone
   ipv4_cidr_block = local.cidr_nlb
 }
 resource "ibm_is_lb" "zone" {
   name    = var.name
+  resource_group = var.resource_group.id
   subnets = [ibm_is_subnet.zone_nlb.id]
   profile = "network-fixed"
   type    = "private"
@@ -74,9 +77,9 @@ resource "ibm_is_lb_pool" "zone" {
   algorithm                = "round_robin"
   protocol                 = "tcp"
   session_persistence_type = "source_ip"
-  health_delay             = 60
-  health_retries           = 5
-  health_timeout           = 30
+  health_delay             = 10 # Interval
+  health_retries           = 2 # Max retries
+  health_timeout           = 5 # Timeout
   health_type              = "http"
   health_monitor_url       = "/"
   #health_monitor_port    = 80
@@ -92,6 +95,7 @@ resource "ibm_is_lb_pool_member" "zone" {
 }
 resource "ibm_is_subnet" "zone_dns" {
   name            = "${var.name}-dns"
+  resource_group = var.resource_group.id
   vpc             = var.vpc.id
   zone            = var.zone
   ipv4_cidr_block = local.cidr_dns
