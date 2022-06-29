@@ -2,7 +2,7 @@
 
 variable "prefix" {
   description = "resources created will be named: $${prefix}vpc-pubpriv, vpc name will be $${prefix} or will be defined by vpc_name"
-  default     = "reglb"
+  default     = "glbnlb"
 }
 
 variable "resource_group_name" {
@@ -20,7 +20,7 @@ variable "region" {
 
 variable "zones" {
   description = "number of zones to create"
-  default     = 3
+  default     = 2
 }
 
 variable "instances" {

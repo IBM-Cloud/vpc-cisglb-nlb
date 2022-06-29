@@ -42,11 +42,6 @@ resource "ibm_dns_glb_monitor" "cloud" {
   expected_codes = "200"
   path           = "/"
   method         = "GET"
-  #expected_body  = "alive"
-  #headers {
-  #  name  = "headerName"
-  #  value = ["example", "abc"]
-  #}
 }
 // configure custom resolvers with a minimum of two resolver locations.
 resource "ibm_dns_custom_resolver" "cloud" {

@@ -7,7 +7,7 @@ output "name" {
 output "instances" {
   value = ibm_is_instance.zone
 }
-output "floating_ip" {
+output "floating_ips" {
   value = ibm_is_floating_ip.zone
 }
 output "lb" {

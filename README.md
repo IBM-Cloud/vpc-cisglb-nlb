@@ -14,6 +14,10 @@ file=coredns_${version}_linux_amd64.tgz
 wget https://github.com/coredns/coredns/releases/download/v${version}/$file
 tar zxvf $file
 
+# turn off the default dns resolution
+systemctl disable systemd-resolved
+systemctl stop systemd-resolved
+
 # chattr -i stops the resolv.conf file from being updated, configure resolution to be from localhost port 53
 rm /etc/resolv.conf
 cat > /etc/resolv.conf <<EOF
@@ -23,11 +27,6 @@ chattr +i /etc/resolv.conf
 cat /etc/resolv.conf
 ls -l /etc/resolv.conf
 
-# turn off the default dns resolution
-systemctl disable systemd-resolved
-systemctl stop systemd-resolved
-
-
 # coredns will resolve on localhost port 53.  DNS_SERVER_IPS are the custom resolver locations
 cat > Corefile <<EOF
 .:53 {
@@ -36,6 +35,7 @@ cat > Corefile <<EOF
     prometheus localhost:9253
 }
 EOF
+cat Corefile
 ./coredns
 ```
 
@@ -43,6 +43,9 @@ Create a second ssh session to the on premises ubuntu instance that is running c
 ```
 ssh root@...
 ...
+glb=backend.widgets.cogs
+dig $glb
+dig $glb; # try a few times
 curl $glb/instance
 
 
