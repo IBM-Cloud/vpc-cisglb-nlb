@@ -1,5 +1,10 @@
-# Regional load balancer accessable over direct link
+# Regional load balancer accessable through CIS GLB
 
+## TODO
+
+subnet.dns etc consider removing these
+
+# Backup
 ## On premises
 
 The default ubuntu DNS resolver can be hard to follow.  Follow the instructions below to disable the default and use [coredns](https://coredns.io/)

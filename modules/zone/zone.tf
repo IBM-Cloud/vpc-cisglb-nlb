@@ -2,7 +2,6 @@ locals {
   cidr_zone    = cidrsubnet(var.cidr, 1, 0) # zone subnet for the instances
   cidr_control = cidrsubnet(var.cidr, 1, 1) # rest of the stuff
   cidr_nlb     = cidrsubnet(local.cidr_control, 3, 0)
-  cidr_dns     = cidrsubnet(local.cidr_control, 3, 1)
 }
 resource "ibm_is_subnet" "zone" {
   name            = var.name
@@ -36,6 +35,7 @@ resource "ibm_is_instance" "zone" {
   user_data      = <<-EOT
     ${var.user_data}
     echo ${each.value} > /var/www/html/instance
+    echo ${ibm_is_subnet.zone.zone} > /var/www/html/health
   EOT
   resource_group = var.resource_group.id
 
@@ -62,7 +62,7 @@ resource "ibm_is_lb" "zone" {
   resource_group = var.resource_group.id
   subnets        = [ibm_is_subnet.zone_nlb.id]
   profile        = "network-fixed"
-  type           = "private"
+  type           = "public"
 }
 resource "ibm_is_lb_listener" "zone" {
   lb           = ibm_is_lb.zone.id
@@ -81,7 +81,7 @@ resource "ibm_is_lb_pool" "zone" {
   health_retries           = 2  # Max retries
   health_timeout           = 5  # Timeout
   health_type              = "http"
-  health_monitor_url       = "/"
+  health_monitor_url       = "/health"
   #health_monitor_port    = 80
 }
 resource "ibm_is_lb_pool_member" "zone" {
@@ -90,13 +90,5 @@ resource "ibm_is_lb_pool_member" "zone" {
   pool      = element(split("/", ibm_is_lb_pool.zone.id), 1)
   port      = 80
   target_id = each.value.id
-  #target_address = each.value.primary_network_interface[0].primary_ipv4_address
-  weight = 60
-}
-resource "ibm_is_subnet" "zone_dns" {
-  name            = "${var.name}-dns"
-  resource_group  = var.resource_group.id
-  vpc             = var.vpc.id
-  zone            = var.zone
-  ipv4_cidr_block = local.cidr_dns
+  weight    = 60
 }

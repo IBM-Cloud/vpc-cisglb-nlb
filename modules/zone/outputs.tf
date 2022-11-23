@@ -28,6 +28,3 @@ output "subnet" {
 output "subnet_nlb" {
   value = ibm_is_subnet.zone_nlb
 }
-output "subnet_dns" {
-  value = ibm_is_subnet.zone_dns
-}

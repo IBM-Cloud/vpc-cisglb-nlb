@@ -9,6 +9,10 @@ variable "resource_group_name" {
   description = "Resource group that will contain all the resources created by the script."
 }
 
+variable "cis_name" {
+  description = "IBM Cloud Internet Services name. Try command: ibmcloud cis instances"
+}
+
 variable "ssh_key_name" {
   description = "SSH keys are needed to connect to virtual instances. https://cloud.ibm.com/docs/vpc?topic=vpc-getting-started"
 }
