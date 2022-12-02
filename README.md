@@ -1,127 +1,66 @@
 # Regional load balancer accessable through CIS GLB
 
-## TODO
+Connect an IBM Cloud Internet Services, CIS, Global Load Balancer, GLB to an application that is load balanced using a Virtual Private Cloud, VPC, Network Load Balancer, NLB.  The NLB back end can be Virtual Server Instances, VSIs, or Kubernetes Services.
 
-subnet.dns etc consider removing these
+VPC VSI:
 
-# Backup
-## On premises
+![image](diagrams/vpc-cisglb-nlb-arch.svg)
 
-The default ubuntu DNS resolver can be hard to follow.  Follow the instructions below to disable the default and use [coredns](https://coredns.io/)
+VPC IBM Kubernetes Service, IKS, cluster:
 
+![image](diagrams/vpc-cisglb-nlb-iks.svg)
 
-```
-ssh root@...
-...
-# download coredns
-version=1.9.3
-file=coredns_${version}_linux_amd64.tgz
-wget https://github.com/coredns/coredns/releases/download/v${version}/$file
-tar zxvf $file
+NOTE the implementations below are for demonstration purposes.  Production environmens should be adjusted to meet security and production requirements.
 
-# turn off the default dns resolution
-systemctl disable systemd-resolved
-systemctl stop systemd-resolved
+## IC_API_KEY Terraform Configuration
 
-# chattr -i stops the resolv.conf file from being updated, configure resolution to be from localhost port 53
-rm /etc/resolv.conf
-cat > /etc/resolv.conf <<EOF
-nameserver 127.0.0.1
-EOF
-chattr +i /etc/resolv.conf
-cat /etc/resolv.conf
-ls -l /etc/resolv.conf
+The terraform configuration will run from your laptop.  See [terraform](https://cloud.ibm.com/docs/solution-tutorials?topic=solution-tutorials-tutorials#getting-started-macos_terraform) getting started instructions.
 
-# coredns will resolve on localhost port 53.  DNS_SERVER_IPS are the custom resolver locations
-cat > Corefile <<EOF
-.:53 {
-    log
-    forward .  $(cat DNS_SERVER_IPS)
-    prometheus localhost:9253
-}
-EOF
-cat Corefile
-./coredns
-```
-
-Create a second ssh session to the on premises ubuntu instance that is running coredns, copy/paste the suggested output from the terraform output.  A session will look like this:
-```
-ssh root@...
-...
-glb=backend.widgets.cogs
-dig $glb
-dig $glb; # try a few times
-curl $glb/instance
-
-
-while sleep 1; do curl --connect-timeout 2 $glb/instance; done
+The environment variable IC_API_KEY=your_api_key is required to configure the [IBM Cloud Provider plug-in](https://cloud.ibm.com/docs/ibm-cloud-provider-for-terraform?topic=ibm-cloud-provider-for-terraform-provider-reference#provider-parameter-ov)
 
 ```
-
-## Watching failures
-Visit the [VPC Instances](https://cloud.ibm.com/vpc-ext/compute/vs) and notice there are instances in each zone based on variable instances.  The instances can be **Stopped** using the menu on the far right.  Click on the menu then click **Stop** on a few and observe the curl in the while loop.  When you stop all of the instances in a zone notice the failure pattern.
-
-Example, stopping both us-south-1-0 and us-south-1-1:
-
-```
-root@dnsglb-onprem:~# while sleep 1; do curl --connect-timeout 2 $glb/instance; done
-...
-dnsglb-us-south-1-0
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-dnsglb-us-south-2-1
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-dnsglb-us-south-2-0
-dnsglb-us-south-3-1
-dnsglb-us-south-3-1
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-dnsglb-us-south-3-1
-dnsglb-us-south-3-1
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-dnsglb-us-south-3-1
-dnsglb-us-south-2-1
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-curl: (7) Failed to connect to backend.widgets.cogs port 80: Connection refused
-dnsglb-us-south-3-1
-dnsglb-us-south-3-1
-dnsglb-us-south-2-0
-dnsglb-us-south-2-1
-dnsglb-us-south-2-0
+cp template.local.env local.env
+vi local.env;# edit in your apikey
+source local.env
 ```
 
-Start up the instances to see them start up again.
+## VPC, NLB, CIS Configuration
 
-## Troubleshooting
-
-Notes:
-
-The terraform output shows info sorted into zone and instance
-
-
-
-
-
-## todo
-
-maybe
-```
-cat > /etc/NetworkManager/NetworkManager.conf <<EOF
-dns=none
-EOF
-service network-manager restart
-```
-
-ln -s /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+To create the VPC, subnets, NLB, Instances, and CIS GLB change to the vpc_nlb_tf directory and do it:
 
 ```
-vi /etc/systemd/resolved.conf
-  DNSStubListener=no
-vi /etc/resolv.conf
+cd vpc_nlb_tf
+cp template.terraform.tfvars terraform.tfvars
+vi terraform.tfvrs; # make edits suggested
+terraform init
+terraform apply
 ```
 
- /etc/NetworkManager/dispatcher.d/hook-network-manager
+The output will provide some test curl for the CIS GLB and the VPC NLBs.  Try these out to verify your results.
 
+## IKS Configuration
+To create the IKS cluster, Deployments and Services (with VPC NLBs) use the iks_tf directory.
 
-## todo
-- onprem /etc/systemd/resolved.conf
+```
+cd iks_tf
+cp template.terraform.tfvars terraform.tfvars
+vi terraform.tfvrs; # make edits suggested
+terraform init
+terraform apply
+```
+
+It can take over an 60 minutes for the IKS cluster to be created and over 10 minutes for the Kubernetes Service with associated VPC NLBs to be created.
+
+NOTE: SECURITY ALERT: Once complete a directory with a name ID_admin_k8sconfig, like 173a63396eec78a68eb08909cf70204f61cbbe2ee02c699ac078ec0c2c552a1c_ce4n8jsd0lnv9j97v45g_admin_k8sconfig, will be created and it has the credentials to access the kubernetes cluster.
+
+The ID_admin_k8sconfig/config.yaml file can be used to inspect the kubernetes resources: `export KUBECONFIG=173a63396eec78a68eb08909cf70204f61cbbe2ee02c699ac078ec0c2c552a1c_ce4n8jsd0lnv9j97v45g_admin_k8sconfig/config.yml
+
+The output will provide some test curl for the CIS GLB and the VPC NLBs.  Try these out to verify your results.
+
+## Clean Up
+
+In either the vpc_nlb_tf/ iks_tf/ directories you can destroy all of the resources:
+
+```
+terraform destroy
+```

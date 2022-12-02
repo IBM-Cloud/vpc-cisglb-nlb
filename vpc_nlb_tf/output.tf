@@ -1,3 +1,6 @@
+/*
+todo
+
 output "cloud" {
   value = { for zone_index, zone in module.zone : zone_index => {
     lb_hostname    = zone.lb.hostname
@@ -11,3 +14,5 @@ output "cloud" {
     } }
   } }
 }
+
+*/

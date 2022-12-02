@@ -1,12 +1,12 @@
 locals {
+  prefix = "${var.prefix}-vpc" # vpc raw version not the iks version
   tags = [
-    "prefix:${var.prefix}",
+    "prefix:${local.prefix}",
     # lower(replace("dir:${abspath(path.root)}", "/", "_")),
   ]
 
-  zones      = var.zones
-  cidr_cloud = "10.0.0.0/8"
-  cidr_vpc   = cidrsubnet(local.cidr_cloud, 8, 0)
+  zones    = var.zones
+  cidr_vpc = "10.0.0.0/8"
   cidr_zones = { for zone in range(local.zones) : zone => {
     zone = "${var.region}-${zone + 1}"
     cidr = cidrsubnet(local.cidr_vpc, 8, zone),
@@ -39,7 +39,7 @@ data "ibm_is_image" "os" {
 
 
 resource "ibm_is_vpc" "cloud" {
-  name                      = var.prefix
+  name                      = local.prefix
   tags                      = local.tags
   resource_group            = data.ibm_resource_group.all_rg.id
   address_prefix_management = "manual"
@@ -53,10 +53,11 @@ resource "ibm_is_vpc_address_prefix" "cloud" {
   cidr     = each.value.cidr
 }
 
+# create subnet, VSI, NLB, ... in each zone
 module "zone" {
   for_each  = ibm_is_vpc_address_prefix.cloud
-  source    = "./modules/zone"
-  name      = "${var.prefix}-${each.value.zone}"
+  source    = "./zone_tf"
+  name      = "${local.prefix}-${each.value.zone}"
   zone      = each.value.zone
   cidr      = each.value.cidr
   instances = local.instances
@@ -72,4 +73,35 @@ module "zone" {
     id = data.ibm_is_image.os.id
   }
   user_data = local.user_data
+}
+
+locals {
+  origin_name_ip = { for zone_id, zone in module.zone : zone.name => zone.lb.public_ips[0] }
+}
+
+module "cis" {
+  source         = "../modules_tf/cis"
+  cis_name       = var.cis_name
+  domain_name    = var.domain_name
+  origin_name_ip = local.origin_name_ip
+  glb_name       = "${local.prefix}.${var.domain_name}"
+}
+
+output "cis_glb" {
+  value = module.cis.global_load_balancer.name
+}
+
+output "nlbs" {
+  value = local.origin_name_ip
+}
+output "test_curl_glb" {
+  value = <<-EOT
+    curl ${module.cis.global_load_balancer.name}/instance
+  EOT
+}
+output "test_curl_nlbs" {
+  value = [for name, ip in local.origin_name_ip : <<-EOT
+    curl ${ip}/instance;# ${name}
+  EOT
+  ]
 }

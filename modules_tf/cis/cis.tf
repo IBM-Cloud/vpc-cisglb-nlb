@@ -1,3 +1,8 @@
+variable "cis_name" {}
+variable "origin_name_ip" {}
+variable "glb_name" {}
+variable "domain_name" {}
+
 # Define a global load balancer which directs traffic to defined origin pools
 # In normal usage different pools would be set for data centers/availability zones and/or for different regions
 # Within each availability zone or region we can define multiple pools in failover order
@@ -7,7 +12,7 @@ data "ibm_cis" "instance" {
 }
 
 data "ibm_cis_domain" "instance" {
-  domain = "ibmom.com"
+  domain = var.domain_name
   cis_id = data.ibm_cis.instance.id
 }
 
@@ -26,14 +31,14 @@ resource "ibm_cis_healthcheck" "lb" {
 
 resource "ibm_cis_origin_pool" "instance" {
   cis_id = data.ibm_cis.instance.id
-  name   = "cogs-ibmom-pool"
+  name   = var.glb_name
   dynamic "origins" {
-    for_each = { for zone_index, zone in module.zone : zone_index => zone }
+    for_each = var.origin_name_ip
     content {
-      name    = origins.value.name
-      address = origins.value.lb.public_ips[0]
+      name    = origins.key
+      address = origins.value
       enabled = true
-      weight  = floor(1.0 / length(module.zone) * 100) / 100
+      weight  = floor(1.0 / length(var.origin_name_ip) * 100) / 100
     }
   }
   description     = "nlbs"
@@ -46,9 +51,15 @@ resource "ibm_cis_origin_pool" "instance" {
 resource "ibm_cis_global_load_balancer" "instance" {
   cis_id           = data.ibm_cis.instance.id
   domain_id        = data.ibm_cis_domain.instance.id
-  name             = "cogs.ibmom.com"
+  name             = var.glb_name
   fallback_pool_id = ibm_cis_origin_pool.instance.id
   default_pool_ids = [ibm_cis_origin_pool.instance.id]
   description      = "glb - nlb"
   proxied          = false # todo check
+}
+
+output "global_load_balancer" {
+  value = {
+    name = ibm_cis_global_load_balancer.instance.name
+  }
 }
