@@ -19,11 +19,13 @@ data "ibm_resource_group" "all_rg" {
 
 # IKS Cluster ---------------------------------------------------------
 module "cluster" {
-  source            = "./cluster_tf"
-  tags              = local.tags
-  prefix            = local.prefix
-  cidr_zones        = local.cidr_zones
-  worker_count      = local.zones
+  source     = "./cluster_tf"
+  tags       = local.tags
+  prefix     = local.prefix
+  cidr_zones = local.cidr_zones
+  # todo
+  #worker_count      = local.zones
+  worker_count      = 1
   flavor            = "cx2.2x4"
   resource_group_id = data.ibm_resource_group.all_rg.id
 }
@@ -177,6 +179,16 @@ output "cis_glb" {
 
 output "nlbs" {
   value = local.origin_name_ip
+}
+output "test_kubectl" {
+  value = <<-EOT
+    # choose one:
+    export KUBECONFIG=${data.ibm_container_cluster_config.cluster.config_file_path} ;# env var
+    ibmcloud cs cluster config --cluster ${data.ibm_container_cluster_config.cluster.cluster_name_id} ;# cluster config via cluster id
+    # try these:
+    kubectl get deployments
+    kubectl get services
+  EOT
 }
 output "test_curl_glb" {
   value = <<-EOT
