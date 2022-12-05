@@ -1,1 +1,7 @@
-../provider.tf
+# provider
+
+provider "ibm" {
+  region = var.region
+}
+
+

@@ -1,27 +1,31 @@
 # variables - see template.local.env for the required variables
 
 variable "prefix" {
-  description = "resources created will be named: $${prefix}vpc-pubpriv, vpc name will be $${prefix} or will be defined by vpc_name"
+  description = "Resources created will be named: prefix-vpc or prefix-iks."
   default     = "glbnlb"
 }
-
 variable "resource_group_name" {
-  description = "Resource group that will contain all the resources created by the script."
+  description = "Resource group that will contain all the resources created, try: ibmcloud resource groups"
 }
 
 variable "cis_name" {
-  description = "IBM Cloud Internet Services name. Try command: ibmcloud cis instances"
+  description = "IBM Cloud Internet Services name, try: ibmcloud cis instances"
 }
 variable "domain_name" {
-  description = "IBM Cloud Internet Services domain name like example.com, try command: ibmcloud cis domains"
+  description = "IBM Cloud Internet Services domain name like example.com, try: ibmcloud cis domains"
 }
 
 variable "region" {
-  description = "Availability zone that will have the resources deployed to.  To obtain a list of availability zones you can run the ibmcloud cli: ibmcloud is regions."
+  description = "Region for all resources, try: ibmcloud is regions."
   default     = "us-south"
 }
 
+variable "instances" {
+  description = "number of pods per deployment in zone connected to the NLB"
+  default     = 2
+}
+
 variable "zones" {
-  description = "number of zones to create"
+  description = "Number of zones to create"
   default     = 2
 }

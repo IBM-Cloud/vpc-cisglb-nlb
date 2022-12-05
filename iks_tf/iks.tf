@@ -81,7 +81,7 @@ resource "kubernetes_deployment" "zone" {
       }
     }
 
-    replicas = 2
+    replicas = var.instances
 
     template {
       metadata {
