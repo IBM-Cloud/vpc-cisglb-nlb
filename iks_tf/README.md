@@ -1,10 +1,10 @@
 # Schematics users
 
-Open the Settings tab and edit the *Variables* using the three vertical dots menu.  Click the information symbol for a description of each variable. 
+Open the Settings tab and edit the *Variables* using the three vertical dots menus.  Click the information symbol for a description of each variable. 
 
 Schematics will execute terraform using the credentials of the current user.  Make sure that you have the permissions to create the resources described in github repository main README.md
 
-Hit the **Apply plan** button.  Check the results in the **Jobs** panel.  Scroll to the end of the **Apply plan successful** log to see the test curl commands that you can run from your desktop:
+Hit the **Apply plan** button.  Check the results in the **Jobs** panel.  Scroll to the end of a **Apply plan successful** log to see the test curl commands that you can run from your desktop:
 
 Example:
 ```
@@ -28,6 +28,11 @@ Example:
  2022/12/05 18:58:17 Terraform refresh | ibmcloud cs cluster config --cluster ce0123456789k5mhj93g ;# cluster config via cluster id
 ```
 
+Example curl to the CIS GLB:
+```
+curl glbnlb7-iks.ibmom.com/instance
+```
+
 To use kubectl from your desktop use the second method suggested.
 
 Example:
@@ -35,3 +40,7 @@ Example:
 ```
 ibmcloud cs cluster config --cluster ce0123456789k5mhj93g
 ```
+
+## Clean up
+Click **Actions** menu and select **Destroy resources**.
+When the Desroy resources is complete click **Actions** menu and select **Delete workspace**.
