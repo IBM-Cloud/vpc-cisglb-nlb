@@ -10,7 +10,7 @@ VPC IBM Kubernetes Service, IKS, cluster:
 
 ![image](diagrams/vpc-cisglb-nlb-iks.svg)
 
-NOTE the implementations below are for demonstration purposes.  Production environmens should be adjusted to meet security and production requirements.
+NOTE the implementations below are for demonstration purposes.  Production environments should be adjusted to meet security and production requirements.
 
 You can provision from your laptop by running terraform, or using IBM Cloud Schematics
 
