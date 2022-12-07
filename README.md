@@ -10,7 +10,7 @@ VPC IBM Kubernetes Service, IKS, cluster:
 
 ![image](diagrams/vpc-cisglb-nlb-iks.svg)
 
-NOTE the implementations below are for demonstration purposes.  Production environments should be adjusted to meet security and production requirements.
+NOTE the implementations below are for demonstration purposes.  Actual environments must be adjusted to meet security and production requirements.
 
 You can provision from your laptop by running terraform, or using IBM Cloud Schematics
 
@@ -28,8 +28,7 @@ source local.env
 ```
 
 ### VPC, VSI, NLB, CIS Configuration
-
-To create the VPC, subnets, NLB, Instances, and CIS GLB change to the vpc_nlb_tf directory and do execute terraform:
+The configuration for VPC, subnets, NLB, Instances, and CIS GLB creations is in the vpc_nlb_tf directory.
 
 ```
 cd vpc_nlb_tf
@@ -37,11 +36,11 @@ terraform init
 terraform apply
 ```
 
-The output will provide some test curl commands for the CIS GLB and the VPC NLBs.  Try these out to verify your results.
+The terraform output will provide some test curl commands for the CIS GLB and the VPC NLBs.  Try these out to verify your results.  The NLBs should return servers from the associated zone.  The GLB will return a mix of zones.
 
 
 ### IKS, NLB, CIS Configuration
-To create the IKS cluster, Deployments and Services (with VPC NLBs) use the iks_tf directory.
+The configuration for the IKS cluster, Deployments and Services (with VPC NLBs) is in the iks_tf directory.
 
 ```
 cd iks_tf
@@ -49,7 +48,7 @@ terraform init
 terraform apply
 ```
 
-It can take over an 60 minutes for the IKS cluster to be created and over 10 minutes for the Kubernetes Service with associated VPC NLBs to be created.
+It can take over an 60 minutes for the IKS cluster to be created.
 
 NOTE SECURITY ALERT: Once complete a directory with a name ID_admin_k8sconfig, like 0123456789ec701234567899cf70204f61cbbe0123456789c078ec0c2c552a1c_ce4n8jsd0lnv9j97v45g_admin_k8sconfig, will be created and it has the credentials to access the kubernetes cluster.
 
